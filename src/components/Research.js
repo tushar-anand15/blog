@@ -4,7 +4,6 @@ function Research() {
   return (
     <div>
       <h2>Research</h2>
-      <p>Details about research projects and publications will go here.</p>
       <h3>Publications:</h3>
       <ul>
         <li>
