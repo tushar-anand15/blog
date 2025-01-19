@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import About from './components/About';
-import Articles from './components/Articles';
-import ArticleDetail from './components/ArticleDetail';
-import Blog from './components/Blog';
-import Research from './components/Research';
 import './App.css';
+
+// Lazy load components
+const About = React.lazy(() => import('./components/About'));
+const Articles = React.lazy(() => import('./components/Articles'));
+const ArticleDetail = React.lazy(() => import('./components/ArticleDetail'));
+const Blog = React.lazy(() => import('./components/Blog'));
+const Research = React.lazy(() => import('./components/Research'));
 
 function App() {
   return (
@@ -22,24 +24,26 @@ function App() {
           </div>
         </header>
         <main>
-          <Routes>
-            <Route path="/" element={
-              <div>
-                <div className="about-section">
-                  <div className="about-image">
-                    <img src={`${process.env.PUBLIC_URL}/profilepic.jpg`} alt="Tushar Anand" />
+          <Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              <Route path="/" element={
+                <div>
+                  <div className="about-section">
+                    <div className="about-image">
+                      <img src={`${process.env.PUBLIC_URL}/profilepic.jpg`} alt="Tushar Anand" />
+                    </div>
+                    <div className="about-text">
+                      <About />
+                    </div>
                   </div>
-                  <div className="about-text">
-                    <About />
-                  </div>
+                  <Articles />
                 </div>
-                <Articles />
-              </div>
-            } />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/article/:id" element={<ArticleDetail />} />
-            <Route path="/research" element={<Research />} />
-          </Routes>
+              } />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/article/:id" element={<ArticleDetail />} />
+              <Route path="/research" element={<Research />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </Router>
