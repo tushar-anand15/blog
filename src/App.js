@@ -5,8 +5,8 @@ import './App.css';
 // Lazy load components
 const About = React.lazy(() => import('./components/About'));
 const Articles = React.lazy(() => import('./components/Articles'));
+const BlogArticles = React.lazy(() => import('./components/BlogArticles')); // New component
 const ArticleDetail = React.lazy(() => import('./components/ArticleDetail'));
-const Blog = React.lazy(() => import('./components/Blog'));
 const Research = React.lazy(() => import('./components/Research'));
 
 function App() {
@@ -39,8 +39,8 @@ function App() {
                   <Articles />
                 </div>
               } />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/article/:id" element={<ArticleDetail />} />
+              <Route path="/blog" element={<BlogArticles />} /> {/* Use new component */}
+              <Route path="/blog/:slug" element={<ArticleDetail />} />
               <Route path="/research" element={<Research />} />
             </Routes>
           </Suspense>

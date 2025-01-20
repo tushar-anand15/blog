@@ -84,9 +84,10 @@ p {
 }
 
 .article-detail h1 {
-  text-align: left;
-  text-decoration: underline;
-  color: #FF8C00;
+  color: #333; 
+  border-bottom: 3px solid #FF8C00; 
+  display: inline-block; 
+  padding-bottom: 5px; 
 }
 
 .article-detail {

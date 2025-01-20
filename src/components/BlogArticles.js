@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import articleList from '../articleList.json'; // Import the generated JSON file
-import './Articles.css';
+import './BlogArticles.css'; // New CSS file for blog layout
 
-function Articles() {
+function BlogArticles() {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
@@ -35,14 +35,16 @@ function Articles() {
   }, []);
 
   return (
-    <section className="articles-section">
-      <h2>Recent Posts</h2>
-      <div className="articles-container">
+    <section className="blog-articles-section">
+      <h2>Blog Posts</h2>
+      <div className="blog-articles-container">
         {articles.map((article, index) => (
-          <div key={index} className="article-card">
-            <h2>{article.title}</h2>
-            <ReactMarkdown>{article.intro}</ReactMarkdown>
-            <Link to={`/blog/${article.slug}`} className="read-more-link">Read More</Link>
+          <div key={index} className="blog-article-card">
+            <div className="blog-article-content">
+              <h2>{article.title}</h2>
+              <ReactMarkdown>{article.intro}</ReactMarkdown>
+              <Link to={`/blog/${article.slug}`} className="read-more-link">Read More</Link>
+            </div>
           </div>
         ))}
       </div>
@@ -50,4 +52,4 @@ function Articles() {
   );
 }
 
-export default Articles;
+export default BlogArticles;
