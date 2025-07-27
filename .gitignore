@@ -13,3 +13,12 @@ build/
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db
+# Ignore build output directory
+dist/
+
+# Firebase cache files
+.firebase/
+
+# Firebase debug log
+firebase-debug.log
+firebase-debug.*.log
