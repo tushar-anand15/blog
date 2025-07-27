@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformers from scratch: Data preparation and word embeddings - Tushar's Blog</title>
+    <style>
+        body { max-width: 800px; margin: 0 auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: #333; }
+        .header { background-color: #f8f8f8; padding: 20px; margin: -20px -20px 40px -20px; border-bottom: 3px solid #FF8C00; }
+        .header h1 { margin: 0; color: #333; font-size: 2.5em; }
+        .nav a { color: #FF8C00; text-decoration: none; font-weight: bold; margin-right: 20px; }
+        .nav a:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #FF8C00; text-decoration: none; font-weight: bold; }
+        .back-link:hover { text-decoration: underline; }
+        .article-content h1, .article-content h2 { color: #333; border-bottom: 3px solid #FF8C00; display: inline-block; padding-bottom: 5px; }
+        .article-content h2 { font-size: 1.8em; }
+        .article-content img { max-width: 600px; width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .article-content pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .article-content code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: 'Courier New', monospace; }
+        .article-content blockquote { border-left: 4px solid #FF8C00; margin: 20px 0; padding: 10px 20px; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Tushar Anand</h1>
+        <nav class="nav">
+            <a href="index.html">Home</a>
+            <a href="blog.html">Blog</a>
+            <a href="research.html">Research</a>
+        </nav>
+    </div>
+    <a href="blog.html" class="back-link">← Back to Blog</a>
+    <div class="article-content">
+        <h1>Transformers from scratch: Data preparation and word embeddings</h1>
+<h1>Introduction</h1>
+<p>Transformer models, first introduced in the seminal paper &quot;Attention is All You Need&quot; by Vaswamy et al., revolutionized the field of natural language processing. The architecture replaced the traditional recurrent neural networks with a novel self-attention mechanism, allowing the model to process input sequences in parallel and capture long-range dependencies more effectively.</p>
+<p>The key innovation of transformers is their ability to weigh the importance of different parts of the input sequence when processing each element, done through the self-attention mechanism. This, combined with their parallel processing capability, made them significantly more efficient to train than previous architectures while achieving superior performance on various NLP tasks.</p>
+<p>In this project, I&#39;m implementing a simplified version of the GPT (Generative Pre-trained Transformer) architecture, which is an auto-regressive language model based on the decoder portion of the original transformer. In this article, I&#39;ve focused on the fundamental data preparation steps needed before training the model. This includes tokenization (converting text into numerical representations), creating input-target pairs for training, and implementing both token and positional embeddings - essential components that allow the model to understand both the meaning of words and their position in a sequence. All the associated code with this project can be found <a href="https://github.com/tushar-anand15/transformers-from-scratch">here</a>.</p>
+<h2>Tokenization</h2>
+<p>Tokenization is the process of breaking down text into smaller units called tokens. These tokens can be words, subwords, or even individual characters. The choice of tokenization strategy significantly impacts the model&#39;s vocabulary size and its ability to handle unseen words.</p>
+<h3>Word-Level Tokenization</h3>
+<p>The simplest approach is to split text on whitespace and punctuation. For example, &quot;Hello, world!&quot; becomes [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;, &quot;!&quot;]. While straightforward, this approach can lead to large vocabularies and struggles with morphological variations of words.</p>
+<h3>Subword Tokenization</h3>
+<p>Modern transformer models often use subword tokenization algorithms like BPE (Byte-Pair Encoding) or WordPiece. These methods break down less common words into smaller units. For example, &quot;unconditional&quot; might become [&quot;un&quot;, &quot;condition&quot;, &quot;al&quot;].</p>
+<h3>Handling Unknown Tokens</h3>
+<p>When encountering words not in the vocabulary, tokenizers typically:</p>
+<ul>
+<li>Use a special [UNK] token to represent unknown words</li>
+<li>Break down unknown words into known subword units</li>
+<li>Use byte-level fallback to ensure any text can be encoded</li>
+</ul>
+<p>This approach allows models to handle out-of-vocabulary words while maintaining a reasonable vocabulary size.</p>
+<h3>How tokenization looks like in practice: encoding and decoding</h3>
+<p>To create a simple tokenizer, we can use our corpus of text to get the unique words and sort them to get a vocabulary. This vocabulary can be used as input for our custom tokenizer which can encode and decode text sequences. The vocabulary dictionary shows a small sample of the word-to-token mappings:</p>
+<pre><code class="language-python">vocabulary = {
+    &#39;a&#39;: 1,
+    &#39;aa&#39;: 2,
+    &#39;aaa&#39;: 3,
+    &#39;aaawww&#39;: 4,
+    &#39;aah&#39;: 5,
+    &#39;aaron&#39;: 6,
+    &#39;ab&#39;: 7,
+    &#39;aback&#39;: 8,
+    &#39;abandon&#39;: 9,
+    &#39;abandoned&#39;: 10,
+    &#39;abandoning&#39;: 11,
+    &#39;abandonment&#39;: 12,
+    &#39;abaringe&#39;: 13,
+    &#39;abasement&#39;: 14
+}
+</code></pre>
+<p>A simple example of what a encoding and decoding looks like:</p>
+<pre><code class="language-python"># Input sentence
+sentence = &quot;This is a sample sentence to demonstrate the encoding and decoding process.&quot;
+
+# Create tokenizer instance
+custom_tokenizer = CustomTokenizer(vocabulary)
+
+# Encode the sentence into token IDs
+encoded = custom_tokenizer.encode(sentence)
+print(encoded)
+# Output: [36063, 19043, 1, 31001, 31796, 36383, 9451, 35902, 0, 1342, 0, 0]
+
+# Decode the token IDs back to text
+decoded = custom_tokenizer.decode(encoded)
+print(decoded)
+# Output: &#39;this is a sample sentence to demonstrate the &lt;UNK&gt; and &lt;UNK&gt; &lt;UNK&gt;&#39;
+</code></pre>
+<p><strong>Important takeaways:</strong></p>
+<ul>
+<li>The input sentence is first converted into a sequence of numerical token IDs using the encode() method</li>
+<li>Each word is mapped to a unique ID based on the vocabulary dictionaryWords not found in the vocabulary (like &quot;process&quot;) are replaced withtokens (represented by 0 in the encoded sequence)</li>
+<li>The decode() method converts the numerical tokens back to text, showing how information can be lost when words are not in the vocabulary</li>
+</ul>
+<h3>More intelligent tokenization: Byte Pair Encoding</h3>
+<p>Byte Pair Encoding (BPE) is a data compression technique adapted for tokenization in NLP. It starts with character-level tokens and iteratively merges the most frequent pairs of adjacent tokens to create new subword tokens. This approach helps balance vocabulary size with the model&#39;s ability to handle rare and unknown words.</p>
+<p>For example, consider how BPE might handle words with common suffixes:</p>
+<pre><code class="language-python">tokenizer = CustomTokenizer(vocabulary)
+
+# Sample text
+sentence = &quot;the quick brown fox jumps over the lazy dog&quot;
+
+# Encode the text using BPE
+encoded_bpe = tokenizer.encode_bpe(sentence.lower(), token_dict)
+print(&quot;Encoded BPE:&quot;, encoded_bpe)
+
+# Decode the BPE tokens back to text
+decoded_bpe = tokenizer.decode_bpe(encoded_bpe, token_dict)
+print(&quot;Decoded Text:&quot;, decoded_bpe)
+
+# Output:
+# Encoded BPE: [35902, 28498, 4614, 14215, 19484, 25139, 35902, 20330, 10654]
+# Decoded Text: the quick brown fox jumps over the lazy dog
+</code></pre>
+<p>In this example, each word is represented by a unique token ID. A more detailed explanation of BPE and its implementation can be found in the HuggingFace documentation <a href="https://huggingface.co/learn/nlp-course/chapter6/5">here</a>. </p>
+<p>The key advantage of BPE is that it can handle out-of-vocabulary words by breaking them down into meaningful subword units, making it more robust than simple word-level tokenization.</p>
+<h2>Understanding word embeddings</h2>
+<p>Word embeddings are numerical representations of words that capture semantic relationships in a high-dimensional vector space. Unlike simple one-hot encoding where each word is represented as a binary vector, word embeddings create dense vectors where similar words have similar vector representations.</p>
+<h3>How Computers Process Text</h3>
+<p>Computers fundamentally work with numbers, not text. To process language, we need to convert words into numerical representations that preserve meaningful relationships. This is where embeddings come in - they transform discrete symbols (words, sentences, or even entire documents) into continuous vector spaces where mathematical operations become meaningful.</p>
+<h3>Types of Embeddings</h3>
+<h3>1. Word Embeddings</h3>
+<p>Word embeddings (like Word2Vec, GloVe, or FastText) represent individual words as dense vectors. These are useful for basic text classification tasks, word similarity comparisons and simple language understanding tasks.</p>
+<p><img src="./articles/image.png" alt="An example of how word embeddings look like in practice. When an embedding model is trained, the intuition is that the model hopefully learns the relationship between the words and learns to represent these relationships in vector space. The relationship between a man and a woman is the same as the relationship between a king and queen — which can be seen graphically and mathematically. Credits: 3Blue1Brown (YT link: [https://www.youtube.com/watch?v=wjZofJX0v4M](https://www.youtube.com/watch?v=wjZofJX0v4M))"></p>
+<p>An example of how word embeddings look like in practice. When an embedding model is trained, the intuition is that the model hopefully learns the relationship between the words and learns to represent these relationships in vector space. The relationship between a man and a woman is the same as the relationship between a king and queen — which can be seen graphically and mathematically. Image credits: : <a href="https://www.youtube.com/watch?v=wjZofJX0v4M">3Blue1Brown</a>)</p>
+<h3>2. Sentence Embeddings</h3>
+<p>Sentence embeddings capture meaning at the sentence level, going beyond individual words. Examples include Universal Sentence Encoder and SBERT. Use cases include: semantic search, sentence similarity comparison and question answering systems</p>
+<h3>3. Paragraph/Document Embeddings</h3>
+<p>These embeddings represent entire documents or paragraphs (like Doc2Vec). They&#39;re particularly useful for: document classification, content recommendation systems, document clustering and retrieval augmented generation (RAG),</p>
+<h2>Preparing data for embedding: Pytorch Dataset and Dataloader</h2>
+<p>When working with text data in deep learning, we need efficient ways to handle and process large amounts of text. PyTorch&#39;s Dataset and DataLoader classes provide this functionality, allowing us to create custom datasets and load them in batches for training.</p>
+<h3>Creating Training Samples</h3>
+<p>To prepare text data for training, we need to convert it into input-target pairs. This is done by sliding a window over the text with a specified stride length. For example, with a context length of 8 and a stride of 4:</p>
+<pre><code class="language-python"># Original text: &quot;The quick brown fox jumps over the lazy dog&quot;
+# Tokenized: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+# First sample:
+# Input:  [1, 2, 3, 4, 5, 6, 7, 8]
+# Target: [2, 3, 4, 5, 6, 7, 8, 9]
+
+# Second sample (stride = 4):
+# Input:  [5, 6, 7, 8, 9, 10, 11, 12]
+# Target: [6, 7, 8, 9, 10, 11, 12, 13]
+</code></pre>
+<p>The key insight is that each target sequence is simply the input sequence shifted by one position. This creates a next-token prediction task where the model learns to predict the next token given the previous tokens as context.</p>
+<h3>Batching and DataLoader</h3>
+<p>The DataLoader combines multiple samples into batches, making training more efficient. It handles:</p>
+<ul>
+<li>Shuffling the data for each epoch</li>
+<li>Combining multiple sequences into batches</li>
+<li>Loading data in parallel using multiple workers</li>
+<li>Applying padding if necessary to ensure all sequences in a batch have the same length</li>
+</ul>
+<p>This batched approach allows the model to process multiple sequences simultaneously, significantly speeding up training while maintaining the autoregressive nature of the task - each position can only attend to previous positions in the sequence. I use the Dataloader from Pytorch for ease of processing the data.</p>
+<p>Our embedding model is configured with the following parameters:</p>
+<ul>
+<li><strong>Batch Size</strong>: 4</li>
+<li><strong>Max Length</strong>: 256</li>
+<li><strong>Stride</strong>: 128</li>
+<li><strong>Output Dimension</strong>: 256</li>
+<li><strong>Vocabulary Length</strong>: Determined dynamically based on the text corpus</li>
+</ul>
+<p>These parameters guide how we process text data and generate embeddings.</p>
+<h2>Tokenization with Tiktoken</h2>
+<p>From hereon, I utilize the <code>TiktokenTokenizer</code>, which implements Byte Pair Encoding (BPE), to tokenize our text. This choice is made for its efficiency and ease of use compared to our native implementation.</p>
+<pre><code class="language-python">tiktoken_tokenizer = TiktokenTokenizer()
+encoded_text = tiktoken_tokenizer.encode(text)
+print(&quot;Tiktoken Tokenizer Encoding:&quot;, encoded_text[:10])  # Print first 10 tokens for brevity
+</code></pre>
+<h3>Example Output</h3>
+<p>For the text snippet &quot;The Fulton&quot;, the tokenizer produces the following encoded output:</p>
+<pre><code>Tiktoken Tokenizer Encoding: [464, 44373, 3418, 5675, 48705, 531, 3217, 281, 3645, 286]
+</code></pre>
+<p>This output represents the tokenized form of the text, where each number corresponds to a token in the vocabulary.</p>
+<h2>Batching and DataLoader</h2>
+<p>The DataLoader is responsible for creating batches of data that are fed into the model. It uses the <code>batch_size</code>, <code>max_length</code>, and <code>stride</code> parameters to generate overlapping sequences of tokens.</p>
+<pre><code class="language-python">for batch in dataloader:
+    input_ids, target_ids = batch
+    print(&quot;Batch from DataLoader (input_ids):&quot;, input_ids)
+</code></pre>
+<h3>Explanation</h3>
+<ul>
+<li><strong>Batch Size</strong>: Determines how many sequences are processed together in one forward pass.</li>
+<li><strong>Max Length</strong>: Specifies the maximum length of each sequence.</li>
+<li><strong>Stride</strong>: Controls the overlap between consecutive sequences, allowing the model to capture context across batches.</li>
+</ul>
+<h2>Creating the Embedding Layer</h2>
+<p>The embedding layer is created using PyTorch&#39;s <code>nn.Embedding</code>, which maps token indices to dense vectors of a specified dimension.</p>
+<pre><code class="language-python">embedding_layer = WordEmbeddingLayer(vocab_length, output_dim)
+</code></pre>
+<h3>Dimensions of the Embedding Layer</h3>
+<ul>
+<li><strong>Input Dimension</strong>: <code>vocab_length</code>, which is the size of the vocabulary.</li>
+<li><strong>Output Dimension</strong>: <code>output_dim</code>, set to 256, representing the size of each embedding vector.</li>
+</ul>
+<p>The output dimension is chosen to balance the richness of the representation with computational efficiency.</p>
+<h2>Generating Embeddings</h2>
+<p>Once the input IDs are clamped to ensure they are within the vocabulary range, they are passed through the embedding layer to generate embeddings.</p>
+<pre><code class="language-python">input_ids = torch.clamp(input_ids, max=vocab_length - 1)
+embeddings = embedding_layer(input_ids)
+print(&quot;Sample Embedding Tensor Output:&quot;, embeddings)
+print(&quot;Sample Embedding Tensor Shape:&quot;, embeddings.shape)
+</code></pre>
+<h3>Example Output</h3>
+<p>The embeddings for a batch have the following shape:</p>
+<pre><code>Sample Embedding Tensor Shape: torch.Size([4, 256, 256])
+</code></pre>
+<h3>Explanation</h3>
+<ul>
+<li><strong>Batch Size (4)</strong>: Corresponds to the number of sequences processed together.</li>
+<li><strong>Sequence Length (256)</strong>: Matches the <code>max_length</code> parameter.</li>
+<li><strong>Embedding Dimension (256)</strong>: Matches the <code>output_dim</code>, as specified. I use 256 as the dimension, GPT-3 uses 12,288 dimensions. Higher the embedding dimension, richer the embedding matrix and information that can be gained from the text corpus.</li>
+</ul>
+<h2>Integrating Positional Embeddings</h2>
+<p>In addition to word embeddings, positional embeddings are crucial for transformer models to capture the order of words in a sequence. Unlike recurrent models, transformers process sequences in parallel, so they need a way to understand the position of each word. Positional embeddings provide this information by adding a unique vector to each position in the input sequence.</p>
+<h3>Creating the Positional Embedding Layer</h3>
+<p>The positional embedding layer is initialized with the context length and output dimensions, similar to the word embedding layer. This ensures that each position in the sequence has a corresponding embedding vector.</p>
+<pre><code class="language-python">pos_embedding_layer = PositionalEmbedding(context_length=max_length, output_dim=output_dim)
+pos_embeddings = pos_embedding_layer()
+print(&quot;Positional Embeddings Shape:&quot;, pos_embeddings.shape)
+</code></pre>
+<h3>Example Output</h3>
+<p>The positional embeddings have the following shape:</p>
+<pre><code>Positional Embeddings Shape: torch.Size([256, 256])
+</code></pre>
+<h3>Explanation</h3>
+<ul>
+<li><strong>Sequence Length (256)</strong>: Matches the <code>max_length</code> parameter, providing a unique embedding for each position in the sequence.</li>
+<li><strong>Embedding Dimension (256)</strong>: Matches the <code>output_dim</code>, ensuring compatibility with the word embeddings.</li>
+</ul>
+<h3>Combining Word and Positional Embeddings</h3>
+<p>The final input vectors to the transformer model are obtained by adding the word embeddings and positional embeddings. This addition allows the model to incorporate both the semantic meaning of words and their positional context.</p>
+<pre><code class="language-python"># Assuming input_ids is already defined and processed
+word_embeddings = embedding_layer(input_ids)
+final_input_vectors = word_embeddings + pos_embeddings.unsqueeze(0)
+print(&quot;Final Input Vectors Shape:&quot;, final_input_vectors.shape)
+</code></pre>
+<h3>Example Output</h3>
+<p>The final input vectors have the following shape:</p>
+<pre><code>Final Input Vectors Shape: torch.Size([4, 256, 256])
+</code></pre>
+<h3>Explanation</h3>
+<ul>
+<li><strong>Batch Size (4)</strong>: Corresponds to the number of sequences processed together.</li>
+<li><strong>Sequence Length (256)</strong>: Matches the <code>max_length</code> parameter, ensuring each position has a corresponding embedding.</li>
+<li><strong>Embedding Dimension (256)</strong>: Matches the <code>output_dim</code>, providing a rich representation for each token.</li>
+</ul>
+<h2>Conclusion</h2>
+<p>By integrating positional embeddings with word embeddings, we create input vectors that capture both the meaning and order of words in a sequence. This setup is essential for transformer models to effectively process and understand text data. The combination of these embeddings allows the model to leverage the power of self-attention, which we shall cover in the next article.</p>
+
+    </div>
+</body>
+</html>
