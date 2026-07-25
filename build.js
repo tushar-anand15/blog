@@ -349,10 +349,10 @@ function getAboutContent() {
             <div class="about-text">
                 <h2>Hi, I'm Tushar</h2>
                 <p>
-                    I make India's public data <em>usable</em>. Most of it is technically public but locked inside messy PDFs, unreliable portals, and un-queryable government websites. I build the scrapers, pipelines, databases, and APIs that turn that raw mess into structured, searchable data &mdash; and increasingly, applied-AI layers on top so people can actually ask questions of it.
+                    I like solving problems at scale &mdash; and the interesting ones usually start as a mountain of messy data nobody can actually use: millions of court records, decades of government gazettes, thousands of financial filings. I build the systems that fix that &mdash; scrapers, pipelines, databases, APIs &mdash; and increasingly the AI layers on top so people can ask questions of the data in plain language.
                 </p>
                 <p>
-                    Right now I'm a Senior Technical Consultant at the <strong>Vidhi Centre for Legal Policy</strong>, making India's primary legal sources structured, searchable, and machine-readable &mdash; a bilingual pipeline normalizing ~15,000 Tamil Nadu Gazette issues, a legislation tracker consolidating 970 acts with their amendment histories, and a retrieval layer (local embeddings + reciprocal rank fusion, exposed over an MCP server) across a corpus of 15M+ documents. Earlier I worked on data and legal-policy research at the National Institute of Public Finance and Policy (NIPFP) and XKDR Forum.
+                    My path has zig-zagged between fast-moving startups and public policy on purpose &mdash; I've been a founding AI engineer shipping agentic products, and a researcher releasing open datasets for the public good. Today I'm a Senior Technical Consultant at the <strong>Vidhi Centre for Legal Policy</strong>, making India's primary legal sources structured and searchable; earlier, data and legal-policy work at NIPFP and XKDR Forum.
                 </p>
                 <p>
                     I hold a master's in Urban Policy and Governance from the Tata Institute of Social Sciences, Mumbai, and a bachelor's in Economics, Political Science, and Sociology from Christ University, Bangalore. My <a href="cv.html">full CV is here</a>, and my code is on <a href="https://github.com/tushar-anand15" target="_blank" rel="noopener noreferrer">GitHub</a>.
