@@ -27,6 +27,18 @@ if (fs.existsSync('./public/cv')) {
     fs.cpSync('./public/cv', path.join(outputDir, 'cv'), { recursive: true });
 }
 
+// Copy custom-domain file for GitHub Pages (so the domain persists on every deploy)
+if (fs.existsSync('./public/CNAME')) {
+    fs.cpSync('./public/CNAME', path.join(outputDir, 'CNAME'));
+}
+
+// Copy favicons if present
+['favicon.ico', 'favicon.svg'].forEach((f) => {
+    if (fs.existsSync(`./public/${f}`)) {
+        fs.cpSync(`./public/${f}`, path.join(outputDir, f));
+    }
+});
+
 function extractTitle(content) {
     const titleMatch = content.match(/^#\s+(.+)/m);
     return titleMatch ? titleMatch[1].trim() : 'Untitled';
