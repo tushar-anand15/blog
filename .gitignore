@@ -22,3 +22,6 @@ dist/
 # Firebase debug log
 firebase-debug.log
 firebase-debug.*.log
+
+# Internal planning & scan docs (keep local, repo is public)
+docs/
